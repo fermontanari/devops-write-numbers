@@ -48,34 +48,34 @@ public class Translate
 	}
     
     public String translate(Double value){
-    	String result = "";
+    	StringBuilder result = new StringBuilder();
     	Double mapValue;
     	if (value / 100 > 10 || value < 0){
     		return "Valor Inválido";
     	}
     	else if (value / 100 >= 1){
     		mapValue = value /100;
-    		result += centenas.get(mapValue.intValue());
+    		result.append(centenas.get(mapValue.intValue()));
     		value = value%100;
     	}
     	if (value / 10 >= 1){
     		mapValue = value/10;
-    		if (result.isEmpty()){
-    			result += dezenas.get(mapValue.intValue());
+    		if (result.length() == 0){
+    			result.append(dezenas.get(mapValue.intValue()));
     		}
     		else{
-    			result += " e " + dezenas.get(mapValue.intValue()).toLowerCase();
+    			result.append(" e " + dezenas.get(mapValue.intValue()).toLowerCase());
     		}
     		value = value%10;
     	}
     	if (value > 0){
-    		if (result.isEmpty()){
-    			result += unidades.get(value.intValue());
+    		if (result.length() == 0){
+    			result.append(unidades.get(value.intValue()));
     		}
     		else{
-    			result += " e " + unidades.get(value.intValue()).toLowerCase();
+    			result.append(" e " + unidades.get(value.intValue()).toLowerCase());
     		}
     	}
-    	return result + " reais";
+    	return result.append(" reais").toString();
     }
 }
