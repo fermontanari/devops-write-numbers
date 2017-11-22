@@ -1,5 +1,6 @@
 package write.literal.number;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,9 +10,10 @@ import java.util.Map;
  */
 public class Translate 
 {
-	Map <Integer, String> centenas = new HashMap<Integer, String>();
-	Map <Integer, String> dezenas = new HashMap<Integer, String>();
-	Map <Integer, String> unidades = new HashMap<Integer, String>();
+	private Map <Integer, String> centenas = new HashMap<Integer, String>();
+	private Map <Integer, String> dezenas = new HashMap<Integer, String>();
+	private Map <Integer, String> unidades = new HashMap<Integer, String>();
+	private BigDecimal decimalValue;
 	
 	Translate(){
 		centenas.put(1, "Cem");
@@ -47,35 +49,69 @@ public class Translate
 		unidades.put(9, "Nove");
 	}
     
-    public String translate(Double value){
+    public String translate(BigDecimal value){
     	StringBuilder result = new StringBuilder();
-    	Double mapValue;
-    	if (value / 100 > 10 || value < 0){
-    		return "Valor Inválido";
+    	decimalValue = value;
+    	if ( (decimalValue.divide(new BigDecimal(100)).compareTo(BigDecimal.valueOf(10)) > 0) || decimalValue.compareTo(BigDecimal.ZERO) < 0){
+    		return new StringBuilder("Valor Inválido").toString();
     	}
-    	else if (value / 100 >= 1){
-    		mapValue = value /100;
-    		result.append(centenas.get(mapValue.intValue()));
-    		value = value%100;
+    	else {
+	    	translateReais(result);
+	    	translateCents(result);
     	}
-    	if (value / 10 >= 1){
-    		mapValue = value/10;
-    		if (result.length() == 0){
-    			result.append(dezenas.get(mapValue.intValue()));
-    		}
-    		else{
-    			result.append(" e " + dezenas.get(mapValue.intValue()).toLowerCase());
-    		}
-    		value = value%10;
-    	}
-    	if (value > 0){
-    		if (result.length() == 0){
-    			result.append(unidades.get(value.intValue()));
-    		}
-    		else{
-    			result.append(" e " + unidades.get(value.intValue()).toLowerCase());
-    		}
-    	}
-    	return result.append(" reais").toString();
+    	
+    	return result.toString();
     }
+
+	private StringBuilder translateReais(StringBuilder result) {
+		if (decimalValue.divide(new BigDecimal(100)).compareTo(BigDecimal.ONE) >= 0){
+			calculateCurrentValue(result, centenas.get(decimalValue.divide(new BigDecimal(100)).intValue()), 100);
+    	}
+		if (decimalValue.intValue() == 11){
+			calculateCurrentValue(result, dezenas.get(decimalValue.intValue()), 11);
+		}
+		if (decimalValue.intValue() == 12){
+			calculateCurrentValue(result, dezenas.get(decimalValue.intValue()), 12);
+		}
+    	if (decimalValue.divide(new BigDecimal(10)).compareTo(BigDecimal.ONE) >= 0){
+    		calculateCurrentValue(result, dezenas.get(decimalValue.divide(new BigDecimal(10)).intValue()), 10);
+    	}
+    	if (decimalValue.compareTo(BigDecimal.ZERO) > 0){
+    		calculateCurrentValue(result, unidades.get(decimalValue.intValue()), 1);
+    		
+    		decimalValue = decimalValue.subtract(new BigDecimal(decimalValue.intValue()));
+    	}
+    	return result.append(" reais");
+	}
+	
+	private StringBuilder translateCents(StringBuilder result) {
+		decimalValue = decimalValue.multiply(new BigDecimal(100));
+		if (decimalValue.compareTo(BigDecimal.ZERO) > 0){
+			if (decimalValue.intValue() == 11){
+				calculateCurrentValue(result, dezenas.get(decimalValue.intValue()), 11);
+			}
+			if (decimalValue.intValue() == 12){
+				calculateCurrentValue(result, dezenas.get(decimalValue.intValue()), 12);
+			}
+			if (decimalValue.divide(new BigDecimal(10)).compareTo(BigDecimal.ONE) >= 0){
+	    		calculateCurrentValue(result, dezenas.get(decimalValue.divide(new BigDecimal(10)).intValue()), 10);
+	    	}
+	    	if (decimalValue.compareTo(BigDecimal.ZERO) > 0){
+	    		calculateCurrentValue(result, unidades.get(decimalValue.intValue()), 1);
+	    		decimalValue = decimalValue.subtract(new BigDecimal(decimalValue.intValue()));
+	    	}
+	    	result.append(" centavos");
+		}
+    	return result;
+	}
+
+	private void calculateCurrentValue(StringBuilder result, String correspondingValue, int unit) {
+		if (result.length() == 0){
+			result.append(correspondingValue);
+		}
+		else{
+			result.append(" e " + correspondingValue.toLowerCase());
+		}
+		decimalValue = decimalValue.remainder(new BigDecimal(unit)).setScale(2, BigDecimal.ROUND_HALF_UP);
+	}
 }
